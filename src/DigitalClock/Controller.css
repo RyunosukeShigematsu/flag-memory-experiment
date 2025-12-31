@@ -1,0 +1,51 @@
+/* 中央表示（メイン時計） */
+.clock-wrapper {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 420px;
+  height: 180px;
+}
+
+/* 時計 */
+.clock-area {
+  width: 420px;
+  height: 180px;
+}
+
+.clock-area canvas {
+  width: 420px !important;
+  height: 180px !important;
+  display: block;
+}
+
+/* ★ Controller 専用の開始ボタン */
+.controller-start-button {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+
+  padding: 8px 20px;
+  font-size: 16px;
+  cursor: pointer;
+
+  /* ★ 色・見た目を追加 */
+  background: linear-gradient(
+    180deg,
+    rgb(108, 138, 100),   /* #6c8a64 */
+    rgb(79, 106, 74)     /* #4f6a4a */
+  );
+  color: rgb(246, 243, 234); /* 生成り白 */
+  border: none;
+  border-radius: 8px;
+}
+
+.controller-start-button:hover {
+  opacity: 0.9;
+}
+
+.controller-start-button:active {
+  transform: translateX(-50%) scale(0.98);
+}

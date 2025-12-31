@@ -1,0 +1,448 @@
+/* ▼ サイズ調整用の変数 ▼ */
+:root {
+  --cell-width: 200px; /* 1枚の横幅 */
+  --cell-gap: 20px;    /* マス間の余白 */
+}
+
+.card-task-container {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  background: #ffffff;
+}
+
+
+/* ▼▼ ここから 3×3 グリッド × 2面 ▼▼ */
+
+/* ボード全体の置き場（時計の下に2面を左右に配置） */
+.boards-area {
+  position: absolute;
+  top: 25%;
+  left: 2%;
+  right: 2%;
+  bottom: 2%;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 左右2面 */
+  gap: 24px;
+  align-items: start;
+}
+
+/* 各ボードは 3×3 のグリッド */
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, var(--cell-width));
+  gap: var(--cell-gap);
+  align-content: start;
+  justify-content: center;
+}
+
+/* ======== ここから FlipCard の見た目（新規追加） ======== */
+
+/* フリップの基本 */
+.flip-card {
+  width: var(--cell-width);
+  aspect-ratio: 3 / 2;   /* 国旗比 */
+  perspective: 1000px;
+  cursor: pointer;
+}
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .45s cubic-bezier(.2,.7,.2,1);
+}
+.flip-card.is-flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+/* 表裏の共通面 */
+.flip-card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  backface-visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #d9d9d9;
+  box-shadow: 0 1px 5px rgba(0,0,0,.06) inset;
+}
+
+/* 表面：リネン × モスグリーン（落ち着き＆カード感） */
+.flip-card-front {
+  position: relative;
+  border-radius: 12px;
+  box-sizing: border-box;
+  aspect-ratio: 3 / 2;         /* 常に3:2を維持 */
+  overflow: hidden;
+
+  /* ベースは穏やかなモスグリーン。布目をうっすら重ねる */
+  background:
+    /* 織りの縦筋（とても弱く） */
+    repeating-linear-gradient(0deg,
+      rgba(255,255,255,0.03) 0 1px, transparent 1px 3px),
+    /* 織りの横筋（とても弱く） */
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,0.03) 0 1px, transparent 1px 3px),
+    /* ベースカラー（わずかにムラ感を出すための2色グラデ） */
+    linear-gradient(180deg, #9CAF88, #6c8a64);
+
+  /* しっかりした“カードの縁” */
+  border: 1px solid #4f6a4a;         /* ダークグリーンの外枠 */
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,0.06), /* 内側の細い明度差フレーム */
+    0 4px 10px rgba(0,0,0,0.15);            /* 浮かせ過ぎない影 */
+}
+
+/* 内側フレーム（カードの面取り感） */
+.flip-card-front::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.10); /* ごく薄い内枠 */
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.10);       /* 面の落ち着いた縁取り */
+  pointer-events: none;
+}
+
+/* コーナーマーカー（カードらしさを足す小さな切り欠き風） */
+.flip-card-front::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 6px;
+  /* 角だけ残す細いライン（4隅のL字を作る） */
+  background:
+    /* 左上 */
+    linear-gradient(#d9e4d5, #d9e4d5) top    left,
+    linear-gradient(#d9e4d5, #d9e4d5) top    left,
+    /* 右上 */
+    linear-gradient(#d9e4d5, #d9e4d5) top    right,
+    linear-gradient(#d9e4d5, #d9e4d5) top    right,
+    /* 左下 */
+    linear-gradient(#d9e4d5, #d9e4d5) bottom left,
+    linear-gradient(#d9e4d5, #d9e4d5) bottom left,
+    /* 右下 */
+    linear-gradient(#d9e4d5, #d9e4d5) bottom right,
+    linear-gradient(#d9e4d5, #d9e4d5) bottom right;
+  background-repeat: no-repeat;
+  /* 横線/縦線の長さと太さ（お好みで調整可） */
+  background-size:
+    18px 1px, 1px 18px,   /* 左上：横/縦 */
+    18px 1px, 1px 18px,   /* 右上 */
+    18px 1px, 1px 18px,   /* 左下 */
+    18px 1px, 1px 18px;   /* 右下 */
+  /* 配置 */
+  background-position:
+    top 0 left 0,   top 0 left 0,
+    top 0 right 0,  top 0 right 0,
+    bottom 0 left 0,bottom 0 left 0,
+    bottom 0 right 0,bottom 0 right 0;
+  opacity: .9;
+  pointer-events: none;
+}
+
+/* （任意）表面のラベル色も布×緑に合わせて少し落ち着かせるなら： */
+.flag-label {
+  font-family: 'Dancing Script', cursive;
+  font-size: 32px;
+  color: #f6f3ea;                   /* クリーム寄りの白 */
+  text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+  letter-spacing: .5px;
+}
+
+/* 裏面：生成り × 淡グリーン（表面と相性の良い落ち着き） */
+.flip-card-back {
+  position: absolute; /* ← 固定配置 */
+  inset: 0;           /* ← 枠内いっぱいに広げる */
+  border-radius: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  /* やや黄味がかった生成りに微細な布目 */
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(255,255,255,0.04) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,0.02) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #f8f6f0, #f1eee7);
+
+  /* 表と似た二重縁取り */
+  border: 1px solid #b4c4b2; /* 淡グリーン */
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,0.5),
+    0 4px 10px rgba(0,0,0,0.12);
+
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+}
+
+/* 内側フレーム */
+.flip-card-back::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4);
+  pointer-events: none;
+}
+
+/* コーナーマーカー */
+.flip-card-back::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 6px;
+  background:
+    linear-gradient(#4f6a4a, #4f6a4a) top    left,
+    linear-gradient(#4f6a4a, #4f6a4a) top    left,
+    linear-gradient(#4f6a4a, #4f6a4a) top    right,
+    linear-gradient(#4f6a4a, #4f6a4a) top    right,
+    linear-gradient(#4f6a4a, #4f6a4a) bottom left,
+    linear-gradient(#4f6a4a, #4f6a4a) bottom left,
+    linear-gradient(#4f6a4a, #4f6a4a) bottom right,
+    linear-gradient(#4f6a4a, #4f6a4a) bottom right;
+  background-repeat: no-repeat;
+  background-size:
+    18px 1px, 1px 18px,
+    18px 1px, 1px 18px,
+    18px 1px, 1px 18px,
+    18px 1px, 1px 18px;
+  background-position:
+    top 0 left 0,   top 0 left 0,
+    top 0 right 0,  top 0 right 0,
+    bottom 0 left 0,bottom 0 left 0,
+    bottom 0 right 0,bottom 0 right 0;
+  opacity: .9;
+  pointer-events: none;
+}
+
+
+/* 表面ラベル（Dancing Script） */
+.flag-label {
+  font-family: 'Dancing Script', cursive;
+  font-size: 32px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 3px rgba(0,0,0,.3);
+}
+
+/* 裏面テキスト（国名） */
+.back-text {
+  font-size: 22px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 裏面の国旗画像 */
+.back-flag {
+  width: 85%;
+  height: 85%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+/* ======== ここまで FlipCard の見た目 ======== */
+
+
+/* 下部フッター（下段4枚に重ならないように上へ） */
+.answer-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* 16px の余白 + 下段カードの高さ + グリッド間隔 */
+  bottom: calc(60px);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5; /* 前面に */
+}
+
+.go-answer-btn {
+  pointer-events: auto;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid #b4c4b2;
+  background: linear-gradient(180deg, #f8f6f0, #f1eee7);
+  color: #2f3b2f;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.6);
+  cursor: pointer;
+}
+.go-answer-btn:hover { filter: brightness(0.98); }
+.go-answer-btn:active { transform: translateY(1px); }
+
+/* 下段4枚コンテナ：画面下で中央揃え＆横一列 */
+.answer-bottom {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  bottom: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--cell-gap);
+  z-index: 3;
+}
+
+/* ✅ 4枚目の前に「3＋3の区切り」を作る */
+.answer-bottom > :nth-child(4) {
+  margin-left: 40px; /* ← ここが“3枚＋3枚”の間隔 */
+  position: relative;
+}
+
+
+
+/* 下段カードは少し小さめ（上の85%） */
+:root {
+  --cell-width: 200px;         /* 既存 */
+  --cell-gap: 20px;            /* 既存 */
+  --cell-width-sm: calc(var(--cell-width) * 0.85); /* 追加：下段サイズ */
+}
+
+.answer-slot {
+  width: var(--cell-width-sm);
+  height: calc(var(--cell-width-sm) * 2 / 3); /* 3:2維持 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* FlipCardの枠もスモールに合わせる */
+.answer-slot .flip-card {
+  width: var(--cell-width-sm);
+  aspect-ratio: 3 / 2;
+}
+
+
+/* 上段カード：選択用カーソル（めくらず選ぶだけ） */
+.select-tile { cursor: pointer; }
+
+/* 下段の判定枠（明るい緑／赤） */
+.answer-slot.is-correct {
+  box-shadow:
+    0 0 0 8px #2ecc71,          /* ← 太くした */
+    0 0 20px rgba(46, 204, 113, .7);
+  border-radius: 12px;
+}
+.answer-slot.is-wrong {
+  box-shadow:
+    0 0 0 8px #e74c3c,          /* ← 太くした */
+    0 0 20px rgba(231, 76, 60, .7);
+  border-radius: 12px;
+}
+
+
+.judge-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 350px;
+  font-weight: bold;
+  z-index: 999;
+  opacity: 0;
+  animation: fadeInOut 1s ease-in-out;
+  pointer-events: none; /* ボタン操作をブロックしない */
+}
+
+.judge-overlay.ok {
+  color: #00cc66; /* 緑色 ○ */
+}
+
+.judge-overlay.ng {
+  color: #ff3333; /* 赤色 × */
+}
+
+@keyframes fadeInOut {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  80%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+}
+
+/* 下段カード（FlagAnswer用） */
+.answer-slot {
+  transform-origin: center center;
+  transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1),
+              box-shadow 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.answer-slot:hover {
+  transform: scale(1.14) translateY(-3px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  z-index: 3;
+}
+
+/* 上段・FlagTask共通：hoverableクラスのみ拡大 */
+.hoverable {
+  transform: scale(1.0);
+  transform-origin: center center;
+  transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1),
+              box-shadow 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.hoverable:hover {
+  transform: scale(1.10) translateY(-3px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  z-index: 3;
+}
+
+/* === 制限時間プログレスバー === */
+.progress-bar-wrapper {
+  position: absolute;
+  top: 80px;                /* 時計に被らないように調整 */
+  left: 50%;                /* 中央寄せ */
+  transform: translateX(-50%);
+  width: 40%;               /* 短め（40%は全幅の4割） */
+  height: 10px;
+  background-color: #e0e0e0; /* バーの背景（グレー） */
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 10;              /* 時計より上に出す */
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(to right, #4caf50, #81c784);
+  transition: width 0.08s linear;
+  border-radius: 6px 0 0 6px;
+}
+
+.task-message {
+  position: absolute;
+  top: 120px;          /* バーの下に配置。微調整可能 */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2f3b2f;
+  z-index: 10;         /* バーより上に出す */
+  pointer-events: none; /* カード操作の邪魔をしない */
+}
+
+.trial-counter {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 999;
+
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+
+  font-size: 16px;
+  font-weight: 800;
+  color: #2f3b2f;
+  user-select: none;
+}

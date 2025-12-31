@@ -1,0 +1,57 @@
+.home-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Home画面用ボタン */
+.home-start-button {
+  padding: 18px 36px;
+  font-size: 20px;
+  font-weight: 600;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  transition: transform 0.12s ease, filter 0.15s ease;
+}
+
+.home-start-button:active {
+  transform: translateY(2px);
+}
+
+/* ===== Clock（注意・準備） ===== */
+.home-start-button.clock {
+  background: linear-gradient(
+    180deg,
+    rgb(96, 125, 139),   /* #607D8B */
+    rgb(69, 90, 100)     /* #455A64 */
+  );
+  color: rgb(245, 247, 248);
+}
+
+.home-start-button.clock:hover {
+  filter: brightness(1.06);
+}
+
+/* ===== FlagTask（メインタスク） ===== */
+.home-start-button.flag {
+  background: linear-gradient(
+    180deg,
+    rgb(76, 175, 80),    /* #4CAF50 */
+    rgb(56, 142, 60)     /* #388E3C */
+  );
+  color: white;
+}
+
+.home-start-button.flag:hover {
+  filter: brightness(1.06);
+}
