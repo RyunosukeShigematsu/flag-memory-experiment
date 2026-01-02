@@ -4,6 +4,7 @@ import FlagTask from './fragTask/FlagTask';
 import FlagAnswer from './fragTask/FlagAnswer';
 import Finish from './fragTask/Finish';
 import Controller from './DigitalClock/Controller';
+import LoginClock from './DigitalClock/LoginClock';
 
 
 function App() {
@@ -15,7 +16,7 @@ function App() {
         <Route path="/FlagTask" element={<FlagTask />} />
         <Route path="/flagAnswer" element={<FlagAnswer />} />
         <Route path="/finish" element={<Finish />} />
-
+        <Route path="/loginClock" element={<LoginClock />} />
       </Routes>
     </Router>
   );

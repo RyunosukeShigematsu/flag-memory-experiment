@@ -5,6 +5,7 @@ import Clock from "./Clock";
 import QuestionAudio from "./QuestionAudio";
 import "./Controller.css";
 import createAudioCapture from "./AudioCapture";
+import { useLocation } from "react-router-dom";
 
 // const SHOW_DURATION = 3000;
 // const HIDE_DURATION = 22000;
@@ -92,6 +93,10 @@ export default function TaskController() {
   const askTimerRef = useRef(null);
 
   const TOTAL_TRIALS = timeModeList.length;
+
+  const location = useLocation();
+  const participant = location.state?.participant || "anon";
+ 
 
 
   // =============================
@@ -320,7 +325,7 @@ export default function TaskController() {
               try {
                 await audioCapRef.current.beginSession({
                   prefix: "session", // 任意（なくてもOK）
-                  extra: {participant: "RANDOM123", set: 1},         // participantIdなど入れたくなったらここ
+                  extra: { participant, set: 1 },
                 });
                 console.log("[REC] started");
                 // ★ここで確認ログ
