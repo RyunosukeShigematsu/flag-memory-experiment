@@ -10,10 +10,10 @@ export default function FlagLogin() {
   const navigate = useNavigate();
 
   const [runType, setRunType] = useState(null); // "check" | "main"
-  const [group, setGroup] = useState(null);     // "A" | "B"
 
   const trimmed = useMemo(() => name.trim(), [name]);
-  const canGo = trimmed.length > 0 && !!runType && (runType !== "main" || !!group);
+  const canGo = trimmed.length > 0 && !!runType;
+
 
   const handleNext = () => {
     if (!canGo) return;
@@ -21,9 +21,9 @@ export default function FlagLogin() {
       state: {
         participant: trimmed,
         runType,
-        group: runType === "main" ? group : undefined,
       },
     });
+
   };
 
   const handleKeyDown = (e) => {
@@ -83,41 +83,6 @@ export default function FlagLogin() {
               <div className="login-radio-sub">本番（参加者実験）</div>
             </div>
           </label>
-        </div>
-
-        <div className={`login-panel ${runType === "main" ? "" : "is-disabled"}`}>
-          <div className="login-panel-title">グループ（mainのみ）</div>
-
-          <label className={`login-radio ${group === "A" ? "is-active" : ""}`}>
-            <input
-              type="radio"
-              name="group"
-              value="A"
-              checked={group === "A"}
-              onChange={() => setGroup("A")}
-              disabled={runType !== "main"}
-            />
-            <div className="login-radio-text">
-              <div className="login-radio-main">Group A</div>
-              <div className="login-radio-sub">条件A</div>
-            </div>
-          </label>
-
-          <label className={`login-radio ${group === "B" ? "is-active" : ""}`}>
-            <input
-              type="radio"
-              name="group"
-              value="B"
-              checked={group === "B"}
-              onChange={() => setGroup("B")}
-              disabled={runType !== "main"}
-            />
-            <div className="login-radio-text">
-              <div className="login-radio-main">Group B</div>
-              <div className="login-radio-sub">条件B</div>
-            </div>
-          </label>
-
         </div>
 
         <div className="login-actions">
