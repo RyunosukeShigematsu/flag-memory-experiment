@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { timeModeList } from "../timeLine";
+import { practiceTimeModeList } from "../timeLine";
 import Clock from "./Clock";
 import QuestionAudio from "./QuestionAudio";
 import "./Controller.css";
@@ -70,7 +70,7 @@ export default function PracticeClock() {
     const showTimerRef = useRef(null);
     const askTimerRef = useRef(null);
 
-    const TOTAL_TRIALS = timeModeList.length;
+    const TOTAL_TRIALS = practiceTimeModeList.length;
     const [unlockKey, setUnlockKey] = useState(0);
 
 
@@ -109,7 +109,7 @@ export default function PracticeClock() {
 
         if (visible) {
             // ---- trial 開始 ----
-            const item = timeModeList[indexRef.current];
+            const item = practiceTimeModeList[indexRef.current];
             if (item) {
                 setTimeString(item.time);
                 setMode(item.mode);

@@ -1,6 +1,6 @@
 // Controller.js
 import React, { useEffect, useRef, useState } from "react";
-import { timeModeList } from "../timeLine";
+import { systemCheckTimeModeList, timeModeList_A, timeModeList_B } from "../timeLine";
 import Clock from "./Clock";
 import QuestionAudio from "./QuestionAudio";
 import "./Controller.css";
@@ -96,7 +96,9 @@ export default function TaskController() {
   const showTimerRef = useRef(null);
   const askTimerRef = useRef(null);
 
-  const TOTAL_TRIALS = timeModeList.length;
+  // ★ 今この Controller が使う刺激配列
+  const activeTimeModeList = systemCheckTimeModeList;
+  const TOTAL_TRIALS = activeTimeModeList.length;
 
   const location = useLocation();
   const participant = location.state?.participant || "anon";
@@ -192,7 +194,7 @@ export default function TaskController() {
 
     if (visible) {
       // ---- trial 開始 ----
-      const item = timeModeList[indexRef.current];
+      const item = activeTimeModeList[indexRef.current];
       if (item) {
         setTimeString(item.time); // ← timeLine から取得
         setMode(item.mode);

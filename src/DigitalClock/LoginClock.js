@@ -38,7 +38,7 @@ export default function LoginClock() {
                 onKeyDown={handleKeyDown}
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
-                placeholder="例：P001 など"
+                placeholder="例：重松龍之介"
                 style={styles.input}
             />
 
