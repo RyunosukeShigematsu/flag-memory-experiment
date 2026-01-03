@@ -1,5 +1,5 @@
 // Controller.js
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { systemCheckTimeModeList, timeModeList_A, timeModeList_B } from "../timeLine";
 import Clock from "./Clock";
 import QuestionAudio from "./QuestionAudio";
@@ -96,19 +96,42 @@ export default function TaskController() {
   const showTimerRef = useRef(null);
   const askTimerRef = useRef(null);
 
-  // ★ 今この Controller が使う刺激配列
-  const activeTimeModeList = systemCheckTimeModeList;
-  const TOTAL_TRIALS = activeTimeModeList.length;
-
   const location = useLocation();
   const participant = location.state?.participant || "anon";
 
   const navigate = useNavigate();
 
-  // ★セット管理
+  //セット管理
   const TOTAL_SETS = 2;          // ←ここを変えればセット数変わる
   const [setNo, setSetNo] = useState(1); // 1始まり
   const [allDone, setAllDone] = useState(false);
+
+  // ★ Login から渡される値（無ければデフォルト）
+  const runType = location.state?.runType ?? "check"; // "check" | "main"
+  const group = location.state?.group ?? "A";         // "A" | "B"（check時は実質無視）
+
+  // ★ 今が何セット目かで、使う配列を決める
+  const activeTimeModeList = useMemo(() => {
+    // check は常に systemCheck
+    if (runType !== "main") return systemCheckTimeModeList;
+
+    // main：GroupA は A→B→A→B…、GroupB は B→A→B→A…
+    const first = group === "A" ? timeModeList_A : timeModeList_B;
+    const second = group === "A" ? timeModeList_B : timeModeList_A;
+
+    // setNo は 1始まり：奇数セット=first、偶数セット=second
+    return (setNo % 2 === 1) ? first : second;
+  }, [runType, group, setNo]);
+
+  // ★ check → "check", mainは A/B
+  const runLabel = useMemo(() => {
+    return runType !== "main" ? "check" : (group === "A" ? "A" : "B");
+  }, [runType, group]);
+
+
+  const TOTAL_TRIALS = activeTimeModeList.length;
+
+
 
   // ★追加：setNo の最新値を setTimeout 内でも使えるようにする
   const setNoRef = useRef(1);
@@ -257,7 +280,8 @@ export default function TaskController() {
       clearTimeout(timerId);
       clearInterval(tickRef.current);
     };
-  }, [visible, started]);
+  }, [visible, started, activeTimeModeList, TOTAL_TRIALS]);
+
 
   // =============================
   // ② 非表示後に質問音声
@@ -319,7 +343,7 @@ export default function TaskController() {
 
     // 状態更新
     prevVisibleRef.current = isVisible;
-  }, [visible, started, setNo, TOTAL_SETS]);
+  }, [visible, started, setNo, TOTAL_SETS, TOTAL_TRIALS]);
 
 
 
@@ -354,7 +378,7 @@ export default function TaskController() {
               try {
                 await audioCapRef.current.beginSession({
                   prefix: "session",
-                  extra: { participant, set: 1 },
+                  extra: { participant, set: 1, runLabel },
                 });
                 console.log("[REC] started");
               } catch (e) {
@@ -402,7 +426,7 @@ export default function TaskController() {
                   try {
                     await audioCapRef.current.beginSession({
                       prefix: "session",
-                      extra: { participant, set: next },
+                      extra: { participant, set: next, runLabel },
                     });
                   } catch (e) {
                     console.warn("[REC] start failed:", e);

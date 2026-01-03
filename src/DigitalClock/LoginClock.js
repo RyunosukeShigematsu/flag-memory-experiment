@@ -8,12 +8,24 @@ export default function LoginClock() {
     const inputRef = useRef(null);
     const navigate = useNavigate();
 
+    // ★追加：実行モードとグループ
+    const [runType, setRunType] = useState(null); // "check" | "main"
+    const [group, setGroup] = useState(null);         // "A" | "B"
+
     const trimmed = useMemo(() => name.trim(), [name]);
-    const canGo = trimmed.length > 0;
+    
+    const canGo = trimmed.length > 0 && !!runType && (runType !== "main" || !!group);
 
     const handleNext = () => {
         if (!canGo) return;
-        navigate("/Clock", { state: { participant: trimmed } });
+
+        navigate("/Clock", {
+            state: {
+                participant: trimmed,
+                runType,                 // ★追加
+                group: runType === "main" ? group : undefined, // ★check時はgroup無視でもOK
+            },
+        });
     };
 
     const handleKeyDown = (e) => {
@@ -41,6 +53,60 @@ export default function LoginClock() {
                 placeholder="例：重松龍之介"
                 style={styles.input}
             />
+
+            {/* ★追加：実行モード */}
+            <div style={styles.panel}>
+                <div style={styles.panelTitle}>実行モード</div>
+                <label style={styles.radioRow}>
+                    <input
+                        type="radio"
+                        name="runType"
+                        value="check"
+                        checked={runType === "check"}
+                        onChange={() => setRunType("check")}
+                    />
+                    <span>check（確認）</span>
+                </label>
+
+                <label style={styles.radioRow}>
+                    <input
+                        type="radio"
+                        name="runType"
+                        value="main"
+                        checked={runType === "main"}
+                        onChange={() => setRunType("main")}
+                    />
+                    <span>main（本番）</span>
+                </label>
+            </div>
+
+            {/* ★追加：グループ（mainの時だけ有効） */}
+            <div style={{ ...styles.panel, opacity: runType === "main" ? 1 : 0.45 }}>
+                <div style={styles.panelTitle}>グループ（mainのみ）</div>
+                <label style={styles.radioRow}>
+                    <input
+                        type="radio"
+                        name="group"
+                        value="A"
+                        checked={group === "A"}
+                        onChange={() => setGroup("A")}
+                        disabled={runType !== "main"}
+                    />
+                    <span>Group A</span>
+                </label>
+
+                <label style={styles.radioRow}>
+                    <input
+                        type="radio"
+                        name="group"
+                        value="B"
+                        checked={group === "B"}
+                        onChange={() => setGroup("B")}
+                        disabled={runType !== "main"}
+                    />
+                    <span>Group B</span>
+                </label>
+            </div>
 
             <button
                 onClick={handleNext}
