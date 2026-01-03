@@ -517,3 +517,37 @@
   z-index: 3;
 }
 
+
+/* 右上：練習終了ボタン */
+.practice-exit-btn {
+  position: fixed !important;
+  top: 16px !important;
+  right: 16px !important;
+  z-index: 9999 !important;
+
+  width: fit-content !important;
+  height: 40px;
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+
+  padding: 10px 16px !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  border-radius: 10px !important;
+
+  background: #000 !important;
+  color: #fff !important;
+  border: none !important;
+
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.20) !important;
+}
+
+.practice-exit-btn:hover {
+  background: #222 !important;
+}
