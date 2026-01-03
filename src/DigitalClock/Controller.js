@@ -376,76 +376,50 @@ export default function TaskController() {
         />
       </div>
 
-      {finished &&
-        createPortal(
-          <div style={styles.setToast}>
-            <span>{setNo}セット目終了しました．</span>
+   {finished &&
+  createPortal(
+    <div className="set-toast">
+      <span>{setNo}セット目終了しました</span>
 
-            {allDone ? (
-              <button style={styles.homeBtn} onClick={() => navigate("/")}>
-                ホーム画面へ
-              </button>
-            ) : (
-              <button
-                style={styles.homeBtn}
-                onClick={async () => {
-                  const next = setNo + 1;
+      {allDone ? (
+        <button className="toast-btn" onClick={() => navigate("/")}>
+          ホーム画面へ
+        </button>
+      ) : (
+        <button
+          className="toast-btn"
+          onClick={async () => {
+            const next = setNo + 1;
+            setNoRef.current = next;
+            setSetNo(next);
 
-                  // 次セット番号を確定（END_DELAY判定にも使う）
-                  setNoRef.current = next;
-                  setSetNo(next);
+            setAllDone(false);
+            await resetRun();
+            setUnlockKey((k) => k + 1);
 
-                  setAllDone(false);
-                  await resetRun();
-                  setUnlockKey((k) => k + 1);
+            try {
+              await audioCapRef.current.beginSession({
+                prefix: "session",
+                extra: { participant, set: next },
+              });
+            } catch (e) {
+              console.warn("[REC] start failed:", e);
+              return;
+            }
 
-                  try {
-                    await audioCapRef.current.beginSession({
-                      prefix: "session",
-                      extra: { participant, set: next },
-                    });
-                    console.log("[REC] started");
-                  } catch (e) {
-                    console.warn("[REC] start failed:", e);
-                    return;
-                  }
+            setStarted(true);
+          }}
+        >
+          次のセットへ
+        </button>
+      )}
+    </div>,
+    document.body
+  )
+}
 
-                  setStarted(true);
-                }}
-              >
-                次のセットへ
-              </button>
-            )}
-          </div>,
-          document.body
-        )
-      }
 
     </div>
   );
 }
 
-
-const styles = {
-  setToast: {
-    position: "fixed",
-    right: 16,
-    bottom: 16,
-    zIndex: 9999,
-    fontSize: 20,
-    background: "rgba(0,0,0,0.65)",
-    color: "white",
-    padding: "12px 14px",
-    borderRadius: 12,
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-  },
-  homeBtn: {
-    padding: "8px 12px",
-    fontSize: 16,
-    borderRadius: 10,
-    border: "none",
-    cursor: "pointer",
-  },
-};

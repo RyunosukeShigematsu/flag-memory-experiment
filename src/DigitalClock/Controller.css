@@ -49,3 +49,46 @@
 .controller-start-button:active {
   transform: translateX(-50%) scale(0.98);
 }
+
+
+/* ★ トースト（背景のみ調整） */
+.set-toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+
+  font-size: 20px;
+  background: rgb(235, 235, 235);
+  color: rgb(30, 30, 30);
+
+  padding: 14px 16px;
+  border-radius: 16px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+}
+
+.toast-btn {
+  padding: 10px 18px;
+  font-size: 16px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+
+  background: linear-gradient(
+    180deg,
+    rgb(120, 165, 110),
+    rgb(79, 120, 74)
+  );
+  color: white;
+
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+.toast-btn:hover { opacity: 0.95; }
+.toast-btn:active { transform: scale(0.97); }
+
