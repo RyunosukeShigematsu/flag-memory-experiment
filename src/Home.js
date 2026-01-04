@@ -15,7 +15,7 @@ function Home() {
         </button>
 
         <button
-          onClick={() => navigate('/practiceFlagTask')}
+          onClick={() => navigate('/Consent')}
           className="home-start-button flag"
         >
           国旗タスク

@@ -12,6 +12,7 @@ import FlagRest from './Flag/FlagRest';
 import PracticeFlagTask from "./Flag/practiceFlagTask";
 import PracticeFlagAnswer from "./Flag/practiceFlagAnswer";
 import FlagLogin from './Flag/FlagLogin'; 
+import Cpnsent from './Flag/Consent';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/practiceFlagTask" element={<PracticeFlagTask />} />
         <Route path="/practiceFlagAnswer" element={<PracticeFlagAnswer />} />
         <Route path="/flagLogin" element={<FlagLogin />} />
+        <Route path="/Consent" element={<Cpnsent />} />
 
       </Routes>
     </Router>
