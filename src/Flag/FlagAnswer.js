@@ -5,6 +5,7 @@ import './FlagTask.css';
 import FlipCard from './FlipCard';
 import COUNTRIES from './countries';
 import { flagSequence, flagSequence_A, flagSequence_B } from '../timeLine'; // ← ★ 追加
+import { cap } from "./flagCapSingleton"; // パス調整
 
 
 function shuffle(arr) {
@@ -193,7 +194,7 @@ export default function FlagAnswer() {
 
 
   // ✅ 次へ：trialIndex を +1、最後なら finish へ
-  const goNext = useCallback(() => {
+const goNext = useCallback(async () => {
     const nextTrial = trialIndex + 1;
 
     if (nextTrial < totalTrials) {
@@ -210,6 +211,10 @@ export default function FlagAnswer() {
       });
       return;
     }
+
+      // ★ここでセットが終わったので JSON保存（1セット1ファイル）
+  const saveRes = await cap.saveSet(); // 今は中身最小
+  console.log("[Set Saved]", saveRes);
 
     const nextSet = setIndex + 1;
 
@@ -230,7 +235,7 @@ export default function FlagAnswer() {
       replace: true,
       state: { totalTrials, totalSets },
     });
-  }, [trialIndex, totalTrials, setIndex, totalSets, navigate]);
+  }, [trialIndex, totalTrials, setIndex, totalSets, navigate, runType]);
 
 
   //カウントダウンタイマー

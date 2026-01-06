@@ -2,6 +2,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./FlagLogin.css";
+import { cap } from "../Flag/flagCapSingleton";
 
 export default function FlagLogin() {
   const [name, setName] = useState("");
@@ -15,16 +16,19 @@ export default function FlagLogin() {
   const canGo = trimmed.length > 0 && !!runType;
 
 
-  const handleNext = () => {
-    if (!canGo) return;
-    navigate("/FlagTask", {
-      state: {
-        participant: trimmed,
-        runType,
-      },
-    });
+const handleNext = async () => {
+  if (!canGo) return;
 
-  };
+  await cap.beginSession({
+    participant: trimmed,
+    runType,
+  });
+
+  navigate("/FlagTask", {
+    state: { participant: trimmed, runType },
+  });
+};
+
 
   const handleKeyDown = (e) => {
     if (e.key !== "Enter") return;

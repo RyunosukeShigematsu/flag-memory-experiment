@@ -5,6 +5,7 @@ import './FlagTask.css';
 import FlipCard from './FlipCard';
 import COUNTRIES from './countries';
 import { flagSequence, flagSequence_A, flagSequence_B } from '../timeLine'; // ← ★ 追加
+import { cap } from "./flagCapSingleton"; // パスは実際の場所に合わせて
 
 
 export default function FlagTask() {
@@ -135,6 +136,8 @@ export default function FlagTask() {
             <button
               className="start-btn"
               onClick={() => {
+                // ★追加：セット開始を宣言（ファイル名の核が決まる）
+                cap.beginSet({ setIndex });
                 setLeftOpen(null);
                 setRightOpen(null);
                 setTimeLeft(MEMORIZE_SECONDS);
