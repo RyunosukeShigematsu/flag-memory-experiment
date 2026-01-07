@@ -14,6 +14,13 @@ export default function createFlagCapture(options = {}) {
   let currentSetIndex = null;     // 0-based
   let currentSetSessionId = null; // ファイル名用のID
   let setStartedAt = null;
+  let setStatus = "ok";        // "ok" | "aborted"
+  let abortReason = null;
+  let abortAt = null;
+
+
+  // ===== events =====
+  let events = []; // ← ★ set内のイベント列
 
   // ===== utils =====
   const pad2 = (n) => String(n).padStart(2, "0");
@@ -50,11 +57,14 @@ export default function createFlagCapture(options = {}) {
       console.warn("[FlagCapture] beginSet but session not active");
       return;
     }
-    // 二重開始防止：同じsetIndexで既に開始済みなら何もしない
-    if (currentSetIndex === setIndex && currentSetSessionId) return;
+
 
     currentSetIndex = setIndex;
     setStartedAt = Date.now();
+    setStatus = "ok";
+    abortReason = null;
+    abortAt = null;
+    events = []; // ★このセットのイベントをここから貯める
 
     const ts = makeYmdHis();
     // ★ここがファイル名の核（participant + runType + set + 時刻）
@@ -66,8 +76,45 @@ export default function createFlagCapture(options = {}) {
     });
   }
 
+
+  function abortSet(reason = "unknown") {
+    if (!active) return;
+    if (currentSetIndex == null || currentSetSessionId == null) return;
+    if (setStatus === "aborted") return;
+
+    abortAt = Date.now();
+    setStatus = "aborted";
+    abortReason = String(reason);
+
+    events.push({
+      t: abortAt,
+      type: "SET_ABORT",
+      setIndex: currentSetIndex,
+      payload: { reason: abortReason },
+    });
+  }
+
+  function log(type, payload = {}) {
+    if (!active) return;
+    if (currentSetIndex == null || currentSetSessionId == null) {
+      console.warn("[FlagCapture] log but set not started", { type, payload });
+      return;
+    }
+
+    events.push({
+      t: Date.now(),
+      type,
+      setIndex: currentSetIndex, // 0-based（あなたの内部運用に合わせる）
+      ...payload,
+    });
+  }
+
   // Set終了時に1回呼ぶ（JSON保存）
   async function saveSet(extra = {}) {
+    if (events.some(e => e.type === "SET_END")) {
+      return { ok: false, error: "set already ended" };
+    }
+
     if (!active) return { ok: false, error: "session not active" };
     if (currentSetSessionId == null || currentSetIndex == null) {
       return { ok: false, error: "set not started" };
@@ -75,16 +122,49 @@ export default function createFlagCapture(options = {}) {
 
     const endedAt = Date.now();
 
+    // ★セット終了ログ（必ず1回だけ）
+    events.push({
+      t: endedAt,
+      type: "SET_END",
+      setIndex: currentSetIndex, // 0-based
+      payload: {
+        reason: setStatus === "aborted" ? "aborted" : "completed",
+        eventCountBefore: events.length,
+      },
+    });
+
+
     const body = {
       participant,
       runType,
-      runLabel: runType,          // PHP互換
-      set: String(currentSetIndex + 1), // 1-based
-      sessionId: currentSetSessionId,   // ★PHPがファイル名に使う
+      runLabel: runType,                 // PHP互換
+      set: String(currentSetIndex + 1),  // 1-based（PHP互換）
+      sessionId: currentSetSessionId,    // ★ファイル名に使いたいキー
       startedAt: setStartedAt,
       endedAt,
+
+      // ★追加：分析しやすい構造（将来こっちを主にしたいなら）
+      meta: {
+        participant,
+        runType,
+        setIndex: currentSetIndex,       // 0-basedも入れておくと便利
+        set: String(currentSetIndex + 1),
+        sessionId: currentSetSessionId,
+        startedAt: setStartedAt,
+        endedAt,
+
+        status: setStatus,              // "ok" or "aborted"
+        abortReason: abortReason,       // okならnull
+        abortAt: abortAt,               // okならnull
+      },
+
+      // ★追加：イベント列
+      events,
+
+      // ★呼び出し側が足したいもの
       ...extra,
     };
+
 
     try {
       const res = await fetch(uploadUrl, {
@@ -102,6 +182,10 @@ export default function createFlagCapture(options = {}) {
       currentSetIndex = null;
       currentSetSessionId = null;
       setStartedAt = null;
+      setStatus = "ok";
+      abortReason = null;
+      abortAt = null;
+      events = [];
 
       return json;
     } catch (e) {
@@ -126,6 +210,8 @@ export default function createFlagCapture(options = {}) {
     isActive,
     beginSession,
     beginSet,
+    log,
+    abortSet,
     saveSet,
   };
 }

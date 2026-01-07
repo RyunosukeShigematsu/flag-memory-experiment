@@ -1,5 +1,5 @@
 // src/FlagTask.js
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './FlagTask.css';
 import FlipCard from './FlipCard';
@@ -15,6 +15,10 @@ export default function FlagTask() {
   const navigate = useNavigate();
   const { state } = useLocation();
 
+  const abortOnly = (reason = "unknown") => {
+    if (cap.isActive?.()) cap.abortSet(reason);
+  };
+
   const setIndex = state?.setIndex ?? 0;     // 0始まり
   const totalSets = state?.totalSets ?? 2;
   const trialIndex = state?.trialIndex ?? 0;
@@ -26,6 +30,8 @@ export default function FlagTask() {
   }, [runType, setIndex]);
 
   const TOTAL_TRIALS = activeSeq.length;
+
+  const memStartLoggedRef = useRef(new Set());
 
   // ★追加：started初期値を state から拾う
   const startedFromState = state?.started === true;
@@ -45,6 +51,19 @@ export default function FlagTask() {
   const progress = (timeLeft / MEMORIZE_SECONDS) * 100;
 
   useEffect(() => {
+    const onBeforeUnload = () => {
+      // リロード/タブ閉じ/URL直打ち etc.
+      abortOnly("window_unload_flagtask");
+      // ※ここで await cap.saveSet() は基本できない（ブラウザが待ってくれない）
+    };
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+  useEffect(() => {
     // 2回目以降（started:trueで戻ってくる想定）はStart不要
     if (state?.started === true) {
       setStarted(true);
@@ -56,6 +75,21 @@ export default function FlagTask() {
   }, [trialIndex]);
 
 
+  useEffect(() => {
+    if (!started) return;
+
+    // 1 trial につき1回だけ
+    const key = `${setIndex}-${trialIndex}`;
+    if (memStartLoggedRef.current.has(key)) return;
+    memStartLoggedRef.current.add(key);
+
+    cap.log("MEM_START", {
+      trialIndex, // 0-based
+      payload: {
+        memorizeSeconds: MEMORIZE_SECONDS,
+      },
+    });
+  }, [started, setIndex, trialIndex, MEMORIZE_SECONDS]);
 
 
   // 🕒 タイマー減少処理（0.1秒ずつ減るタイプ）
@@ -138,6 +172,19 @@ export default function FlagTask() {
               onClick={() => {
                 // ★追加：セット開始を宣言（ファイル名の核が決まる）
                 cap.beginSet({ setIndex });
+
+                // ★ここ追加：trialごとのMEM_START重複防止ガードをセット開始時に初期化
+                memStartLoggedRef.current = new Set();
+
+                // ★開始ボタン押下ログ（このセットで1回だけ）
+                cap.log("SET_START", {
+                  // trialIndexは付けない方針でOK（まだtrial開始してない）
+                  payload: {
+                    totalTrials: TOTAL_TRIALS,
+                    memorizeSeconds: MEMORIZE_SECONDS,
+                  },
+                });
+
                 setLeftOpen(null);
                 setRightOpen(null);
                 setTimeLeft(MEMORIZE_SECONDS);

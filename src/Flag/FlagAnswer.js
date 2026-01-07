@@ -21,8 +21,18 @@ export default function FlagAnswer() {
   const ANSWER_SECONDS = 5;
   const [timeLeft, setTimeLeft] = useState(ANSWER_SECONDS);
   const progress = (timeLeft / ANSWER_SECONDS) * 100;
+
   const { state } = useLocation();
   const navigate = useNavigate();
+
+  const abortAndGoLogin = async (reason = "unknown") => {
+    if (cap.isActive?.()) {
+      cap.abortSet(reason);
+      await cap.saveSet(); // ← Answerは普通にawaitできる（画面遷移前なので）
+    }
+    navigate("/login", { replace: true });
+  };
+
   // ○×のフィードバック表示用（null | 'ok' | 'ng'）
   const [feedback, setFeedback] = useState(null);
 
@@ -54,13 +64,21 @@ export default function FlagAnswer() {
   }, [state]);
 
   useEffect(() => {
+    const onBeforeUnload = () => {
+      if (cap.isActive?.()) cap.abortSet("window_unload_flaganswer");
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
+
+
+  useEffect(() => {
     if (!base9) {
-      navigate('/flagTask', {
-        replace: true,
-        state: { trialIndex: 0, totalTrials, started: false },
-      });
+      abortAndGoLogin("invalid_state_base9_missing");
     }
-  }, [base9, navigate, totalTrials]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [base9]);
+
 
 
   // 上段配置（左右は同じ9種だが並びは独立にシャッフル）
@@ -194,7 +212,7 @@ export default function FlagAnswer() {
 
 
   // ✅ 次へ：trialIndex を +1、最後なら finish へ
-const goNext = useCallback(async () => {
+  const goNext = useCallback(async () => {
     const nextTrial = trialIndex + 1;
 
     if (nextTrial < totalTrials) {
@@ -212,9 +230,9 @@ const goNext = useCallback(async () => {
       return;
     }
 
-      // ★ここでセットが終わったので JSON保存（1セット1ファイル）
-  const saveRes = await cap.saveSet(); // 今は中身最小
-  console.log("[Set Saved]", saveRes);
+    // ★ここでセットが終わったので JSON保存（1セット1ファイル）
+    const saveRes = await cap.saveSet(); // 今は中身最小
+    console.log("[Set Saved]", saveRes);
 
     const nextSet = setIndex + 1;
 
