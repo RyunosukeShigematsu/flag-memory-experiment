@@ -1,0 +1,7 @@
+# runtime data (DO NOT COMMIT)
+data/**
+!data/.gitkeep
+
+# secrets (if you add later)
+config.php
+.env
