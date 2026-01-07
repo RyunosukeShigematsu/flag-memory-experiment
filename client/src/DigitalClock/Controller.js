@@ -7,6 +7,8 @@ import "./Controller.css";
 import createAudioCapture from "./AudioCapture";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
+import createSpeechCapture from "./SpeechCapture";
+
 
 
 // const SHOW_DURATION = 3000;
@@ -19,7 +21,8 @@ const SHOW_DURATION = 2000;   // 1.5 秒
 const HIDE_DURATION = 8000;   // 8.0 秒
 const ASK_DELAY = 3000;       // 1.5 秒
 const BEEP_LEAD = 500;        // 0.3 秒
-const END_DELAY = 15_000;        // ★ 追加：最後の質問後〜終了まで
+const END_DELAY = 15000;        // ★ 追加：最後の質問後〜終了まで
+
 
 
 // HH:MM:SS を 1 秒進める
@@ -83,6 +86,7 @@ export default function TaskController() {
   const [currentQuestion, setCurrentQuestion] = useState("");
 
   const audioCapRef = useRef(null);
+  const speechCapRef = useRef(null);
 
   const indexRef = useRef(0);
   const trialCountRef = useRef(0);
@@ -155,6 +159,19 @@ export default function TaskController() {
   }, []);
 
   // =============================
+  // ③ SpeechCapture インスタンス作成
+  // =============================
+  useEffect(() => {
+    if (!speechCapRef.current) {
+      speechCapRef.current = createSpeechCapture({
+        uploadUrl: "https://shigematsu.nkmr.io/m1_project/api/upload_text.php",
+        autoDownloadOnUploadFail: true,
+      });
+    }
+  }, []);
+
+
+  // =============================
   // ③ アンマウント時の掃除（推奨）
   // =============================
   useEffect(() => {
@@ -193,6 +210,16 @@ export default function TaskController() {
       console.warn("[REC] forceStop failed:", e);
     }
 
+
+    // 音声認識が残ってたら止める（安全優先）
+    try {
+      await speechCapRef.current?.forceStop?.();
+      console.log("[STT] force stopped");
+    } catch (e) {
+      console.warn("[STT] forceStop failed:", e);
+    }
+
+
     indexRef.current = 0;
     trialCountRef.current = 0;
     prevVisibleRef.current = false;
@@ -222,6 +249,17 @@ export default function TaskController() {
         setTimeString(item.time); // ← timeLine から取得
         setMode(item.mode);
         setCurrentQuestion(item.question ?? "");
+
+        // ★ 質問を timeline に追加（que）
+        speechCapRef.current?.pushTimeline?.({
+          type: "que",
+          text: item.question ?? "",
+          trialIndex: trialCountRef.current + 1, // この trial の番号（1始まり）
+          mode: item.mode,
+          time: item.time,
+        });
+
+
       }
 
       // ★このtrialを使ったので、次のtrialへ進める
@@ -321,6 +359,16 @@ export default function TaskController() {
               // アップロードは失敗してもOK（allDoneは別で立てる）
               const result = await audioCapRef.current.finishSession();
               console.log("[REC] uploaded:", result);
+
+              // ★ここにSTTを入れる！！
+              try {
+                const stt = await speechCapRef.current.finishSession();
+                console.log("[STT] finish:", stt);
+              } catch (e) {
+                console.warn("[STT] finish failed:", e);
+              }
+
+
               console.log("[REC] isRecording after finish:", audioCapRef.current?.isRecording?.());
             } catch (e) {
               console.warn("[REC] upload failed:", e);
@@ -386,6 +434,26 @@ export default function TaskController() {
                 return;
               }
 
+              // ★ここを追加：1セット目のSTT開始
+              try {
+                await speechCapRef.current.beginSession({
+                  participant,
+                  set: 1,
+                  runLabel,
+                  // ★ audio と揃えるため
+                  filenameBaseExtra: {
+                    participant,
+                    set: 1,
+                    runLabel,
+                  },
+                });
+
+                console.log("[STT] started");
+              } catch (e) {
+                console.warn("[STT] start failed (ok):", e);
+              }
+
+
               setStarted(true);
             }}
 
@@ -431,6 +499,23 @@ export default function TaskController() {
                   } catch (e) {
                     console.warn("[REC] start failed:", e);
                     return;
+                  }
+
+                  try {
+                    await speechCapRef.current.beginSession({
+                      participant,
+                      set: next,
+                      runLabel,
+                      // ★ audio と揃えるため
+                      filenameBaseExtra: {
+                        participant,
+                        set: next,
+                        runLabel,
+                      },
+                    });
+
+                  } catch (e) {
+                    console.warn("[STT] start failed (ok):", e);
                   }
 
                   setStarted(true);
