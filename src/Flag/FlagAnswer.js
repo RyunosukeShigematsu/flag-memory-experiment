@@ -1,5 +1,5 @@
 // --- 既存importそのまま ---
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './FlagTask.css';
 import FlipCard from './FlipCard';
@@ -40,6 +40,29 @@ export default function FlagAnswer() {
   const setIndex = state?.setIndex ?? 0;     // 0始まり
   const totalSets = state?.totalSets ?? 2;
   const trialIndex = state?.trialIndex ?? 0;
+
+  // ★ 回答フェーズ開始ログ（StrictModeでも1回だけ）
+  const ansLoggedRef = useRef(false);
+
+  useEffect(() => {
+    if (ansLoggedRef.current) return;
+    ansLoggedRef.current = true;
+
+    if (!cap.isActive?.()) return;
+
+    cap.log("ANS_START", {
+      trialIndex,
+      payload: {
+        answerSeconds: ANSWER_SECONDS,
+        // optional（必要なら）
+        // bottomL,
+        // bottomR,
+        // ids: state?.ids,
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const runType = state?.runType ?? "check";
 
@@ -141,13 +164,32 @@ export default function FlagAnswer() {
   // 下段クリック：押した側=表 / 反対側=裏（あなたの前回仕様のまま）
   // かつ、まだ未判定のときだけ「この下段カードをアクティブ」にする
   const handleBottomClick = (idx) => {
-    //判定済み（ok/ng）のカードは何もしない
+    // 判定済み（ok/ng）のカードは何もしない
     if (bottomResult[idx] !== null) return;
 
-    const item = bottom[idx];
+    const item = bottom[idx]; // { kind: 'name'|'flag', data: { id, ... } }
+    if (!item?.data) return;
+
+    // ★ 追加：ログ（下段6枚の toggle）
+    // 今クリックした結果、open になるか close になるかを「現状態」から判定
+    const willOpen = !bottomOpen[idx];
+    const action = willOpen ? "open" : "close";
+
+    if (cap.isActive?.()) {
+      cap.log("CARD_TARGET", {
+        trialIndex,
+        payload: {
+          phase: "ans",
+          area: "bottom",
+          kind: item.kind,      // 'name' | 'flag'
+          index: idx,           // 0..5
+          cardId: item.data.id, // 国ID
+          action,               // 'open' | 'close'
+        },
+      });
+    }
 
     // 下段の見た目反転（任意）
-    // setBottomOpen(prev => (prev === idx ? null : idx));
     setBottomOpen(prev =>
       prev.map((v, i) =>
         i === idx
@@ -192,6 +234,25 @@ export default function FlagAnswer() {
     const correct =
       (b.kind === 'name' && side === 'left' && clickedId === targetId) ||
       (b.kind === 'flag' && side === 'right' && clickedId === targetId);
+
+    // ★ 上段カード選択ログ
+    if (cap.isActive?.()) {
+      cap.log("CARD_SELECT", {
+        trialIndex,
+        payload: {
+          phase: "ans",
+          area: "top",
+          side: side === "left" ? "flag" : "name",
+          index: indexOnSide,
+          cardId: clickedId,
+
+          targetCardId: targetId,
+          targetKind: b.kind, // 'name' | 'flag'
+
+          correct,
+        },
+      });
+    }
 
     setBottomResult(prev =>
       prev.map((v, i) => (i === activeBottom ? (correct ? 'ok' : 'ng') : v))

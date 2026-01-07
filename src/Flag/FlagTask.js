@@ -138,10 +138,51 @@ export default function FlagTask() {
 
   // 左カードをクリック
   const handleLeftToggle = (i) => {
+    if (!started) return;
+
+    const c = ordered[i];
+    if (!c) return;
+
+    const wasOpen = leftOpen === i;
+    const action = wasOpen ? "close" : "open";
+
+    if (cap.isActive?.()) {
+      cap.log("CARD_TOGGLE", {
+        trialIndex,
+        payload: {
+          phase: "mem",
+          side: "flag",
+          cardId: c.id,
+          action,
+        },
+      });
+    }
+
     setLeftOpen(prev => (prev === i ? null : i));
   };
+
   // 右カードをクリック
   const handleRightToggle = (i) => {
+    if (!started) return;
+
+    const c = ordered[i];
+    if (!c) return;
+
+    const wasOpen = rightOpen === i;
+    const action = wasOpen ? "close" : "open";
+
+    if (cap.isActive?.()) {
+      cap.log("CARD_TOGGLE", {
+        trialIndex,
+        payload: {
+          phase: "mem",
+          side: "name",
+          cardId: c.id,
+          action,
+        },
+      });
+    }
+
     setRightOpen(prev => (prev === i ? null : i));
   };
 
