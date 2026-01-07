@@ -102,21 +102,34 @@ export default function PracticeFlagAnswer() {
 
     const item = bottom[idx];
 
+
+    // ✅ いまの状態から「このクリック後に open になるか」を判断
+    const willOpen = !bottomOpen[idx];
+
     // クリックしたところだけトグル（他は閉じる）
     setBottomOpen((prev) =>
       prev.map((v, i) => (i === idx ? !v : bottomResult[i] ? true : false))
     );
 
-    // nameを選んだら「右の盤面（名前）」を閉じて、左（旗）を開く
-    if (item.kind === "name") {
-      setRightFlips(Array(right9.length).fill(false));
-      setLeftFlips(Array(left9.length).fill(true));
+    if (willOpen) {
+      // ✅ open のときだけ、対応する上段9枚を開く
+      // nameを選んだら「右の盤面（名前）」を閉じて、左（旗）を開く
+      if (item.kind === "name") {
+        setRightFlips(Array(right9.length).fill(false));
+        setLeftFlips(Array(left9.length).fill(true));
+      } else {
+        setLeftFlips(Array(left9.length).fill(false));
+        setRightFlips(Array(right9.length).fill(true));
+      }
+
+      setActiveBottom(idx);
     } else {
+      // ✅ close したら、上段も両方ぜんぶ閉じる（ここが今回の目的）
       setLeftFlips(Array(left9.length).fill(false));
-      setRightFlips(Array(right9.length).fill(true));
+      setRightFlips(Array(right9.length).fill(false));
+      setActiveBottom(null);
     }
 
-    setActiveBottom(idx);
   };
 
   // ===== 3) 上段（左/右）を押して判定する =====

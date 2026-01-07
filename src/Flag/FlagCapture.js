@@ -36,8 +36,15 @@ export default function createFlagCapture(options = {}) {
       pad2(d.getSeconds())
     );
   };
+
   const safe = (s) =>
-    String(s ?? "").trim().replace(/[^\w\-ぁ-んァ-ヶ一-龠]/g, "_");
+    String(s ?? "")
+      .trim()
+      .replace(/[ \u3000]+/g, "_")
+      .replace(/[^\w\-ぁ-んァ-ヶー一-龠]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, ""); // ★先頭末尾の_を消す
+
 
   function isActive() {
     return active;

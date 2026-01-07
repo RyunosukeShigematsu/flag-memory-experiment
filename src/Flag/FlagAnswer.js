@@ -198,18 +198,23 @@ export default function FlagAnswer() {
       )
     );
 
-
-    // 盤の可視状態切替（前回仕様）
-    if (item.kind === 'name') {
-      setRightFlips(Array(right9.length).fill(false));
-      setLeftFlips(Array(left9.length).fill(true));
-    } else if (item.kind === 'flag') {
+    if (willOpen) {
+      // ✅ open のときだけ上段を開く + 選択状態にする
+      // 盤の可視状態切替（前回仕様）
+      if (item.kind === 'name') {
+        setRightFlips(Array(right9.length).fill(false));
+        setLeftFlips(Array(left9.length).fill(true));
+      } else if (item.kind === 'flag') {
+        setLeftFlips(Array(left9.length).fill(false));
+        setRightFlips(Array(right9.length).fill(true));
+      }
+      setActiveBottom(idx);
+    } else {
+      // ✅ close したら上段も両方閉じる + 選択解除
       setLeftFlips(Array(left9.length).fill(false));
-      setRightFlips(Array(right9.length).fill(true));
+      setRightFlips(Array(right9.length).fill(false));
+      setActiveBottom(null);
     }
-
-    // まだ判定していないカードだけ、上段選択の受付を開始
-    setActiveBottom(prev => (bottomResult[idx] == null ? idx : prev));
   };
 
   // 上段クリックで選択（めくらずに“選ぶ”だけ）
