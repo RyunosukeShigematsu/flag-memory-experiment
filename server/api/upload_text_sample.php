@@ -3,9 +3,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 // ===== CORS（upload_audio.php と同じ）=====
 $allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://shigematsu.nkmr.io',
+  'https://YOUR_DOMAIN.example',
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
